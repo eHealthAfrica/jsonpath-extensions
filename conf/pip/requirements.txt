@@ -1,0 +1,11 @@
+################################################################################
+#                                                                              #
+#                           Requirements for testing                           #
+#    (If you need production dependencies, add them to the `setup.py` file)    #
+#                                                                              #
+################################################################################
+
+pytest
+pytest-cov
+pytest-runner
+jsonpath-ng
