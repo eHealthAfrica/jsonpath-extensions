@@ -20,4 +20,5 @@
 #
 set -Eeuo pipefail
 
+docker-compose build
 docker-compose run --rm jsonpath test

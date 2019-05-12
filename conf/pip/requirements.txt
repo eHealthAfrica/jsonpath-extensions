@@ -5,7 +5,8 @@
 #                                                                              #
 ################################################################################
 
+flake8
+jsonpath-ng
 pytest
 pytest-cov
 pytest-runner
-jsonpath-ng
