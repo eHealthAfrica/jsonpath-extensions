@@ -206,3 +206,26 @@ class Hash(BaseFn):
         encoded_msg = (salt + sorted_msg).encode('utf-8')
         hash = str(md5(encoded_msg).hexdigest())[:32]  # 128bit hash
         return hash
+
+
+class ValueReplace(BaseFn):
+    '''
+        usage: `valuereplace({match_value}, {replacement_value})`
+        ! White space after commas is required!
+        result is : {replacement_value} if (match_value == value) else None
+    '''
+    METHOD_SIG = re.compile(r'valuereplace\((.+),\s+(.+)\)')
+
+    def __init__(self, method=None):
+        args = self.get_args(method)
+        self.match_value = args[0]
+        self.replacement = args[1]
+        self.method = method
+
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        value = datum.value
+        if str(value) != self.match_value:
+            return []
+        else:
+            return [DatumInContext.wrap(self.replacement)]

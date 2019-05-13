@@ -14,6 +14,7 @@ src = {
     'boolean0': '0',
     'boolean1': 0,
     'boolean2': 1,
+    'boolean3': True,
     'dt1': '2019-01-01',
     'bad_json': '"{!}',
     'hashable1': [1, 2, 3, 4],
@@ -101,7 +102,16 @@ src = {
         False),
     ('$.dt1.`datetime(%Y-%g-%d, ::)`',
         [],
-        False)  # bad timeformat
+        False),  # bad timeformat
+    ('$.bad_float.`valuereplace(1.04s, clean_value)`',
+        ['clean_value'],
+        False),
+    ('$.bad_float.`valuereplace(1.04_missing, clean_value)`',
+        [],
+        False),
+    ('$.boolean3.`valuereplace(True, clean_value)`',
+        ['clean_value'],
+        False),
 ])
 def test_extensions(cmd, expect, raises):
     if raises:
