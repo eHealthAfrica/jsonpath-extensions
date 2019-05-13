@@ -15,7 +15,11 @@ src = {
     'boolean1': 0,
     'boolean2': 1,
     'dt1': '2019-01-01',
-    'bad_json': '"{!}'
+    'bad_json': '"{!}',
+    'hashable1': [1, 2, 3, 4],
+    'hashable2': [1, 3, 2, 4],
+    'hashable3': {"a": 1, "b": 2},
+    'hashable4': {"b": 2, "a": 1}
 }
 
 
@@ -116,3 +120,19 @@ def test_comparators():
     assert(a == b)
     assert(str(a) == str(b))
     assert(str(a.__repr__()) == str(b.__repr__()))
+
+
+@pytest.mark.parametrize("cmd1,cmd2", [
+    ('$.hashable1.`hash(a)`', '$.hashable2.`hash(a)`'),
+    ('$.hashable3.`hash(a)`', '$.hashable4.`hash(a)`'),
+])
+def test_hashs_equality(cmd1, cmd2):
+    parse(cmd1).find(src)[0] == parse(cmd2).find(src)[0]
+
+
+@pytest.mark.parametrize("cmd1,cmd2", [
+    ('$.hashable1.`hash(a)`', '$.hashable2.`hash(b)`'),
+    ('$.hashable3.`hash(a)`', '$.hashable4.`hash(b)`'),
+])
+def test_hashs_inequality(cmd1, cmd2):
+    parse(cmd1).find(src)[0] != parse(cmd2).find(src)[0]

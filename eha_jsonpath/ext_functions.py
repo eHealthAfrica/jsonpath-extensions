@@ -1,4 +1,5 @@
 from datetime import datetime
+from hashlib import md5
 import json
 import re
 from jsonpath_ng.jsonpath import (
@@ -182,3 +183,26 @@ class ParseDatetime(BaseFn):
         except Exception:
             return []
         return [DatumInContext.wrap(value)]
+
+
+class Hash(BaseFn):
+    '''
+        usage: `hash({salt})`
+    '''
+    METHOD_SIG = re.compile(r'hash\((.+)\)')
+
+    def __init__(self, method=None):
+        args = self.get_args(method)
+        self.salt = args[0]
+        self.method = method
+
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        value = self._hash(self.salt, datum.value)
+        return [DatumInContext.wrap(value)]
+
+    def _hash(self, salt, obj):
+        sorted_msg = json.dumps(obj, sort_keys=True)
+        encoded_msg = (salt + sorted_msg).encode('utf-8')
+        hash = str(md5(encoded_msg).hexdigest())[:32]  # 128bit hash
+        return hash
