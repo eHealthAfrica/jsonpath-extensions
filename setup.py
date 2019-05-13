@@ -18,7 +18,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from datetime import datetime
 from io import open
+import os
 from setuptools import setup, find_packages
 
 
@@ -26,11 +28,13 @@ def read(f):
     return open(f, 'r', encoding='utf-8').read()
 
 
+VERSION = os.environ.get('VERSION', str(datetime.now().isoformat()) + '-alpha')
+
 setup(
-    version='0.0.1',  # read('/var/tmp/VERSION').strip(),
+    version=VERSION,
     name='eha_jsonpath',
     description='jsonpath_ng with extended functionality',
-    # long_description=read('README.md'),
+    long_description=read('README.md'),
     long_description_content_type='text/markdown',
 
     url='https://github.com/eHealthAfrica/jsonpath-extensions/',

@@ -21,26 +21,18 @@
 set -Eeuo pipefail
 
 # ----------------------------------------
-# remove previous packages if needed
-# ----------------------------------------
-rm -rf dist
-rm -rf build
-rm -rf .eggs
-rm -rf eha_jsonpath.egg-info
-
-# ----------------------------------------
 # create the distribution package
 # ----------------------------------------
 export VERSION=$TRAVIS_TAG
-python3 setup.py bdist_wheel
+docker-compose run --rm jsonpath build
 
 # ----------------------------------------
-# remove useless content
+# install twine
 # ----------------------------------------
-rm -rf build
-rm -rf eha_jsonpath.egg-info
+
+pip3 install -q --upgrade twine
 
 # ----------------------------------------
 # upload to PyPi repository
 # ----------------------------------------
-twine upload -r pypi ./dist/* --verbose
+twine upload --skip-existing -r pypi ./dist/* --verbose

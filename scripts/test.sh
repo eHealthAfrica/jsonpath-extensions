@@ -20,5 +20,19 @@
 #
 set -Eeuo pipefail
 
+echo "-------------------- building version --------------------"
 docker-compose build
+echo "-------------------- running tests --------------------"
 docker-compose run --rm jsonpath test
+
+echo "-------------------- building distribution --------------------"
+export VERSION=$(date "+%Y%m%d%H%M%S")
+
+docker-compose run --rm jsonpath build
+
+echo "-------------------- install twine -------------------- "
+pip3 install -q --upgrade twine
+
+echo "-------------------- upload to TestPyPi repository -------------------- "
+export TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/
+twine upload --verbose --skip-existing dist/*

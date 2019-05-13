@@ -8,3 +8,5 @@ services:
     volumes:
       - .:/code
     command: build
+    environment:
+      - VERSION=${VERSION}
