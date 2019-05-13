@@ -48,7 +48,7 @@ class BaseFn(This):
     def get_args(self, method):
         m = self.METHOD_SIG.match(method)
         if m is None:
-            raise DefintionInvalid(f'{method} is invalid')
+            raise DefintionInvalid(f'{method} is invalid for {self.METHOD_SIG}')
         return [i for i in m.groups()]
 
     def __eq__(self, other):
@@ -206,6 +206,25 @@ class Hash(BaseFn):
         encoded_msg = (salt + sorted_msg).encode('utf-8')
         hash = str(md5(encoded_msg).hexdigest())[:32]  # 128bit hash
         return hash
+
+
+class Template(BaseFn):
+    '''
+        usage: `template({template_format{}})`
+        result is : value substited into template
+    '''
+    METHOD_SIG = re.compile(r'template\(([^,;]+)\)')
+
+    def __init__(self, method=None):
+        args = self.get_args(method)
+        self.template_format = args[0]
+        self.method = method
+
+    def find(self, datum):
+        datum = DatumInContext.wrap(datum)
+        value = datum.value
+        value = self.template_format.format(json.dumps(datum.value))
+        return [DatumInContext.wrap(value)]
 
 
 class ValueReplace(BaseFn):

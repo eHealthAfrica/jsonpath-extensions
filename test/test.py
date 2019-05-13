@@ -20,7 +20,8 @@ src = {
     'hashable1': [1, 2, 3, 4],
     'hashable2': [1, 3, 2, 4],
     'hashable3': {"a": 1, "b": 2},
-    'hashable4': {"b": 2, "a": 1}
+    'hashable4': {"b": 2, "a": 1},
+    'null': None
 }
 
 
@@ -111,6 +112,15 @@ src = {
         False),
     ('$.boolean3.`valuereplace(True, clean_value)`',
         ['clean_value'],
+        False),
+    ('$.hashable1.`template(this is my value {})`',
+        ['this is my value [1, 2, 3, 4]'],
+        False),
+    ('$.null.`template(this is my value {})`',
+        ['this is my value null'],
+        False),
+    ('$.boolean3.`template(this is my value {})`',
+        ['this is my value true'],
         False),
 ])
 def test_extensions(cmd, expect, raises):

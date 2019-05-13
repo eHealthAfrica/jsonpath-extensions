@@ -23,6 +23,8 @@ class JsonPathParser(ExtentedJsonPathParser):
             p[0] = fn.Hash(p[1])
         elif p[1].startswith("valuereplace("):
             p[0] = fn.ValueReplace(p[1])
+        elif p[1].startswith("template("):
+            p[0] = fn.Template(p[1])
         else:
             super(JsonPathParser, self).p_jsonpath_named_operator(p)
 
