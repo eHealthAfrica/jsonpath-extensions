@@ -11,6 +11,7 @@ src = {
     'bad_float': '1.04s',
     'int': '1.09',
     'str': 1.0,
+    'str2': 'a',
     'boolean0': '0',
     'boolean1': 0,
     'boolean2': 1,
@@ -21,7 +22,22 @@ src = {
     'hashable2': [1, 3, 2, 4],
     'hashable3': {"a": 1, "b": 2},
     'hashable4': {"b": 2, "a": 1},
+    'hashable5': ['a', 'b', 'c', 'd'],
     'null': None
+}
+
+easy_dictionary = {
+    'a': 1,
+    'b': 'B',
+    'c': {'an', 'object'},
+    'd': ['a', 'list']
+}
+
+hard_dictionary = {
+    'a': '()',  # regex tricker!
+    'b': 'null',
+    'c': '',
+    'd': None
 }
 
 
@@ -102,25 +118,43 @@ src = {
         ['2019-01-01T00:00:00'],
         False),
     ('$.dt1.`datetime(%Y-%g-%d, ::)`',
-        [],
-        False),  # bad timeformat
+        [None],  # bad timeformat
+        False),
     ('$.bad_float.`valuereplace(1.04s, clean_value)`',
         ['clean_value'],
         False),
     ('$.bad_float.`valuereplace(1.04_missing, clean_value)`',
-        [],
+        ['1.04s'],
+        False),
+    ('$.hashable1.`valuereplace(1, clean_value)`',
+        ['clean_value', 2, 3, 4],
+        False),
+    ('$.hashable5.`valuereplace(a, clean_value)`',
+        ['clean_value', 'b', 'c', 'd'],
         False),
     ('$.boolean3.`valuereplace(True, clean_value)`',
         ['clean_value'],
         False),
     ('$.hashable1.`template(this is my value {})`',
-        ['this is my value [1, 2, 3, 4]'],
+        ['this is my value {}'.format(i) for i in src['hashable1']],
         False),
     ('$.null.`template(this is my value {})`',
         ['this is my value null'],
         False),
     ('$.boolean3.`template(this is my value {})`',
         ['this is my value true'],
+        False),
+    (f'$.hashable5.`dictionaryreplace({str(easy_dictionary)})`',
+        [easy_dictionary[i] for i in src.get('hashable5')],
+        False),
+    (f'$.hashable5.`dictionaryreplace({str(hard_dictionary)})`',
+        [hard_dictionary[i] for i in src.get('hashable5')],
+        False),
+    (f'$.hashable5.`dictionaryreplace({str({})}BAD)`',
+        [],
+        True),
+    (f'$.str2.`dictionaryreplace({str(easy_dictionary)})`',
+        [easy_dictionary[src.get('str2')]],
         False),
 ])
 def test_extensions(cmd, expect, raises):

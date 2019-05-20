@@ -1,3 +1,4 @@
+import ast
 from datetime import datetime
 from hashlib import md5
 import json
@@ -60,11 +61,31 @@ class BaseFn(This):
     def __str__(self):
         return '`%s`' % self.method
 
+    def _do(self, obj):  # pragma: nocover
+        raise NotImplementedError
+
+    def _handles_list(self, datum):
+        datum = DatumInContext.wrap(datum)
+        if isinstance(datum.value, list):
+            res = [
+                self._do(i)
+                for i in datum.value
+            ]
+        else:
+            res = [
+                self._do(datum.value)
+            ]
+        return [DatumInContext.wrap(i) for i in res]
+
+    def find(self, datum):
+        return self._handles_list(datum)
+
 
 class SplitList(BaseFn):
     '''
         usage: `splitlist({delimiter}, {castType})`
         ! White space after commas is required!
+        # Does not handle lists
     '''
     METHOD_SIG = re.compile(r'splitlist\((.),\s+(.+)\)')
 
@@ -91,10 +112,8 @@ class Cast(BaseFn):
         self.cast = args[0]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = datum.value
-        return [DatumInContext.wrap(cast(value, self.cast))]
+    def _do(self, obj):
+        return cast(obj, self.cast)
 
 
 class Match(BaseFn):
@@ -111,14 +130,10 @@ class Match(BaseFn):
         self.null = args[1]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = datum.value
-        if str(value) == self.null:
-            value = None
-        else:
-            value = (str(value) == self.term)
-        return [DatumInContext.wrap(value)]
+    def _do(self, obj):
+        if str(obj) == self.null:
+            return None
+        return (str(obj) == self.term)
 
 
 class NotMatch(BaseFn):
@@ -135,14 +150,10 @@ class NotMatch(BaseFn):
         self.null = args[1]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = datum.value
-        if str(value) == str(self.null):
-            value = None
-        else:
-            value = (str(value) != self.term)
-        return [DatumInContext.wrap(value)]
+    def _do(self, obj):
+        if str(obj) == str(self.null):
+            return None
+        return (str(obj) != self.term)
 
 
 class ParseDatetime(BaseFn):
@@ -170,19 +181,18 @@ class ParseDatetime(BaseFn):
                 parts.append(defaults[x])
         return obj[slice(*parts)]
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
+    def _do(self, obj):
         try:
             try:
-                value = datetime.strptime(datum.value, self.time_str)
+                value = datetime.strptime(obj, self.time_str)
             except ValueError as ver:
                 raise DefintionInvalid(
                     f'Bad time_format {self.time_str} -> {ver}')
             value = ParseDatetime.args_to_slice(
                 self.slice_arg, value.isoformat())
         except Exception:
-            return []
-        return [DatumInContext.wrap(value)]
+            return None
+        return value
 
 
 class Hash(BaseFn):
@@ -196,16 +206,14 @@ class Hash(BaseFn):
         self.salt = args[0]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = self._hash(self.salt, datum.value)
-        return [DatumInContext.wrap(value)]
-
     def _hash(self, salt, obj):
         sorted_msg = json.dumps(obj, sort_keys=True)
         encoded_msg = (salt + sorted_msg).encode('utf-8')
         hash = str(md5(encoded_msg).hexdigest())[:32]  # 128bit hash
         return hash
+
+    def _do(self, obj):
+        return self._hash(self.salt, obj)
 
 
 class Template(BaseFn):
@@ -220,18 +228,15 @@ class Template(BaseFn):
         self.template_format = args[0]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = datum.value
-        value = self.template_format.format(json.dumps(datum.value))
-        return [DatumInContext.wrap(value)]
+    def _do(self, obj):
+        return self.template_format.format(json.dumps(obj))
 
 
 class ValueReplace(BaseFn):
     '''
         usage: `valuereplace({match_value}, {replacement_value})`
         ! White space after commas is required!
-        result is : {replacement_value} if (match_value == value) else None
+        result is : {replacement_value} if (match_value == value) else original_value
     '''
     METHOD_SIG = re.compile(r'valuereplace\((.+),\s+(.+)\)')
 
@@ -241,10 +246,26 @@ class ValueReplace(BaseFn):
         self.replacement = args[1]
         self.method = method
 
-    def find(self, datum):
-        datum = DatumInContext.wrap(datum)
-        value = datum.value
-        if str(value) != self.match_value:
-            return []
-        else:
-            return [DatumInContext.wrap(self.replacement)]
+    def _do(self, obj):
+        return self.replacement \
+            if str(obj) == str(self.match_value) else obj
+
+
+class DictionaryReplace(BaseFn):
+    '''
+        usage: `dictionaryreplace({stringified_python_dictionary})`
+        result is: path value replaces with value of matching key in dictionary
+    '''
+    METHOD_SIG = re.compile(r'dictionaryreplace\((.+)\)')
+
+    def __init__(self, method=None):
+        args = self.get_args(method)
+        try:
+            # eval the stringified dictionary
+            self._dict = ast.literal_eval(args[0])
+        except SyntaxError:
+            raise DefintionInvalid(f'{args[0]} is not a valid stringified dict')
+        self.method = method
+
+    def _do(self, obj):
+        return self._dict.get(obj, None)

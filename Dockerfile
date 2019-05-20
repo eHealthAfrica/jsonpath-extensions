@@ -5,12 +5,14 @@ FROM python:3.7-slim-stretch
 ################################################################################
 
 WORKDIR /code
-COPY ./ /code
 
+COPY ./conf/pip /code/conf/pip
 RUN useradd -ms /bin/false aether && \
     chown -R aether: /code && \
     pip install -q --upgrade pip && \
     pip install -q -r /code/conf/pip/requirements.txt
+
+COPY ./ /code
 
 ################################################################################
 ## copy application version
