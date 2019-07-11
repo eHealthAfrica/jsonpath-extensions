@@ -48,6 +48,9 @@ hard_dictionary = {
     ('$.space.`space`',
         [],
         True),  # bad name
+    ('$.null.`splitlist( , string)`',
+        [],
+        False),  # bad args
     ('$.space.`splitlist(,)`',
         [],
         True),  # bad args

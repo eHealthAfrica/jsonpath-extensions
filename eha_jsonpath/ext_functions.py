@@ -97,7 +97,9 @@ class SplitList(BaseFn):
 
     def find(self, datum):
         datum = DatumInContext.wrap(datum)
-        value = datum.value.split(self.term)
+        value = []
+        if datum.value:
+            value = datum.value.split(self.term)
         return [DatumInContext.wrap(cast(i, self.cast)) for i in value]
 
 
