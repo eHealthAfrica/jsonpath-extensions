@@ -17,6 +17,7 @@ src = {
     'boolean2': 1,
     'boolean3': True,
     'dt1': '2019-01-01',
+    'dt2': '1.4.2020 11:13',
     'bad_json': '"{!}',
     'hashable1': [1, 2, 3, 4],
     'hashable2': [1, 3, 2, 4],
@@ -123,6 +124,9 @@ hard_dictionary = {
     ('$.dt1.`datetime(%Y-%g-%d, ::)`',
         [None],  # bad timeformat
         False),
+    ('$.dt2.`datetime(%d.%m.%Y %H:%M, 0::)`',
+        ['2020-04-01T11:13:00'],
+        False),
     ('$.bad_float.`valuereplace(1.04s, clean_value)`',
         ['clean_value'],
         False),
@@ -138,6 +142,9 @@ hard_dictionary = {
     ('$.boolean3.`valuereplace(True, clean_value)`',
         ['clean_value'],
         False),
+    ('$.boolean3.`valuereplace(True, 1)`',
+        ['1'],
+        False),  # gives you the value as a string, not an int in this case
     ('$.hashable1.`template(this is my value {})`',
         ['this is my value {}'.format(i) for i in src['hashable1']],
         False),
