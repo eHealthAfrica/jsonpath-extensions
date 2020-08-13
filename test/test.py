@@ -1,4 +1,5 @@
 import pytest
+import uuid
 
 from eha_jsonpath import parse
 from eha_jsonpath.ext_functions import BaseFn
@@ -9,6 +10,9 @@ src = {
     'comma': '1,2,3,4',
     'float': '1.04',
     'bad_float': '1.04s',
+    'epoch1': '0',
+    'epoch2': 1_000_000_000,
+    'epoch3': 1_000_000_000_000_000,
     'int': '1.09',
     'str': 1.0,
     'str2': 'a',
@@ -109,6 +113,27 @@ hard_dictionary = {
     ('$.boolean2.`match(1, 0)`',
         [True],
         False),
+    ('$.epoch1.`epoch(second, 0:4)`',
+        ['1970'],
+        False),
+    ('$.epoch1.`epoch(millis, 0:4)`',
+        ['1970'],
+        False),
+    ('$.epoch1.`epoch(micros, 0:4)`',
+        ['1970'],
+        False),
+    ('$.epoch1.`epoch(other, 0:4)`',
+        ['1970'],
+        True),
+    ('$.epoch2.`epoch(second, 0:4)`',
+        ['2001'],
+        False),
+    ('$.epoch2.`epoch(millis, 0:4)`',
+        ['1970'],
+        False),
+    ('$.epoch3.`epoch(micros, 0:4)`',
+        ['2001'],
+        False),
     ('$.dt1.`datetime(%Y-%m-%d, 0:4)`',
         ['2019'],
         False),
@@ -200,3 +225,19 @@ def test_hashs_equality(cmd1, cmd2):
 ])
 def test_hashs_inequality(cmd1, cmd2):
     parse(cmd1).find(src)[0] != parse(cmd2).find(src)[0]
+
+
+@pytest.mark.parametrize("cmd1", [
+    ('$.hashable1.`hash(a)`'),
+    ('$.hashable2.`hash(b)`'),
+    ('$.hashable3.`hash(a)`'),
+    ('$.hashable4.`hash(b)`')
+])
+def test_hash_is_uuid(cmd1):
+    try:
+        id_ = parse(cmd1).find(src)[0].value
+        uuid.UUID(id_, version=4)
+    except (ValueError, AttributeError, TypeError) as err:
+        assert(False), (id_, err)
+    else:
+        assert(True)

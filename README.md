@@ -107,6 +107,21 @@ _usage:_ ```$.my.path.`datetime({strptime_str}, {return_slice})` ```
 *_White space after commas is required!_*
 
 
+### Parse Epoch Timestamp
+
+Attempts to parse the epoch timestamp from a value found at a given jsonpath. Then returns a part or the whole of the parsed datetime as specified by a python array slice.  Will operate invidiually on array items in the case the path resolves to an array. The input units must be indicated as one of:
+    
+ - `seconds`
+ - `millis`
+ - `micros`
+    
+
+The array slice notation used is the same as in `datetime`.
+
+_usage:_ ```$.my.path.`epoch({units}, {return_slice})` ```
+
+*_White space after commas is required!_*
+
 ### Hash
 
 Returns a 128bit, hex formatted MD5 hash of the value of a resolved jsonpath added to a provided `salt`. This is useful for generating a UUID compatable value from a piece of source information along with some unique salt. This allows for a non-UUID foreign key to be reliably converted to the same UUID compatable value every time. Will operate invidiually on array items in the case the path resolves to an array.

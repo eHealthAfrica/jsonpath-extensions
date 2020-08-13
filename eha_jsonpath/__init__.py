@@ -17,6 +17,8 @@ class JsonPathParser(ExtentedJsonPathParser):
             p[0] = fn.Match(p[1])
         elif p[1].startswith("notmatch("):
             p[0] = fn.NotMatch(p[1])
+        elif p[1].startswith("epoch("):
+            p[0] = fn.ParseEpochDatetime(p[1])
         elif p[1].startswith("datetime("):
             p[0] = fn.ParseDatetime(p[1])
         elif p[1].startswith("hash("):

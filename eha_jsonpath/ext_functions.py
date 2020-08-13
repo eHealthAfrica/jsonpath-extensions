@@ -197,6 +197,35 @@ class ParseDatetime(BaseFn):
         return value
 
 
+class ParseEpochDatetime(BaseFn):
+    '''
+        usage: `epoch({unit}, {return_slice})`
+        ! White space after commas is required!
+        result is : iso_datetime[return_slice]
+    '''
+    METHOD_SIG = re.compile(r'epoch\((.+),\s+(.+)\)')
+    VALID_FORMATS = {
+        'second': 1,
+        'millis': 1_000,
+        'micros': 1_000_000
+    }
+
+    def __init__(self, method=None):
+        args = self.get_args(method)
+        self.time_format = args[0]
+        self.slice_arg = args[1]
+        self.method = method
+
+    def _do(self, obj):
+        if self.time_format not in self.VALID_FORMATS:
+            raise DefintionInvalid(
+                f'{self.time_format} is invalid: excepted {self.VALID_FORMATS.keys()}')
+        deno = self.VALID_FORMATS[self.time_format]
+        value = datetime.fromtimestamp(float(obj) / deno)
+        return ParseDatetime.args_to_slice(
+            self.slice_arg, value.isoformat())
+
+
 class Hash(BaseFn):
     '''
         usage: `hash({salt})`
